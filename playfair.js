@@ -48,35 +48,35 @@ function get_matrix(key) {
 }
 
 // Function to generate digrams from raw message
-function get_digrams(msg) {
-  let digrams = [];
+function get_digraphs(msg) {
+  let digraphs = [];
 
   // generate digrams
   let i = 0;
   while (i < msg.length) {
-    let digram = msg[i];
+    let digraph = msg[i];
 
     // Last letter cannot be left alone in an off sized string
     if (i == msg.length - 1) {
-      digram += "z"; // Add a bogus letter
-      digrams.push(digram);
+      digraph += "z"; // Add a bogus letter
+      digraphs.push(digraph);
       i += 1;
       continue;
     }
 
     // Pair cannot be made with same letter
     if (msg[i] == msg[i + 1]) {
-      digram += "x"; // Add a bogus letter if next letter is same as current one
-      digrams.push(digram);
+      digraph += "x"; // Add a bogus letter if next letter is same as current one
+      digraphs.push(digraph);
       i += 1;
       continue;
     }
 
     // Otherwise make a Pair
-    digram += msg[i + 1];
-    digrams.push(digram);
+    digraph += msg[i + 1];
+    digraphs.push(digraph);
     i += 2;
   }
 
-  return digrams;
+  return digraphs;
 }
