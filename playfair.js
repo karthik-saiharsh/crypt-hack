@@ -31,9 +31,9 @@ function get_matrix(key) {
     let char = String.fromCharCode(i);
 
     // break out if
-    if (row == 5) break;
+    // if (row == 5) break;
 
-    if (!key.includes(char)) {
+    if (!key.includes(char) && i != 106) {
       matrix[row][col] = char;
 
       if (col < 4) col += 1;
@@ -79,4 +79,65 @@ function get_digraphs(msg) {
   }
 
   return digraphs;
+}
+
+// Function to locate position of a digraph in
+function search(matrix, digraph) {
+  let l1 = digraph[0];
+  let l2 = digraph[1];
+  let p1 = [-1, -1];
+  let p2 = [-1, -1];
+
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 5; j++) {
+      if (matrix[i][j] == l1) p1 = [i, j];
+      if (matrix[i][j] == l2) p2 = [i, j];
+    }
+  }
+
+  return [p1, p2];
+}
+
+// Function to encrypt raw message and return cipher text
+function encrypt(key, msg) {
+  let matrix = get_matrix(key);
+  let digraphs = get_digraphs(msg);
+  let cipher_text = "";
+
+  console.log(digraphs);
+
+  digraphs.forEach((digraph) => {
+    let cipher_digraph = "";
+    let position = search(matrix, digraph);
+
+    // If both letters are in same column
+    // Then the letter below each one is chosen
+    if (position[0][1] == position[1][1]) {
+      let col = position[0][1];
+      let row1 = (position[0][0] + 1) % 5;
+      let row2 = (position[1][0] + 1) % 5;
+      cipher_digraph = cipher_digraph + (matrix[row1][col] + matrix[row2][col]);
+      cipher_text += cipher_digraph;
+    }
+    // If both the letters are in the same row
+    // then the letter to the right of each one is taken
+    else if (position[0][0] == position[1][0]) {
+      let row = position[0][0];
+      let col1 = (position[0][1] + 1) % 5;
+      let col2 = (position[1][1] + 1) % 5;
+      cipher_digraph = cipher_digraph + (matrix[row][col1] + matrix[row][col2]);
+      cipher_text += cipher_digraph;
+    }
+    // Else Form a rectangle with the two letters and the letters on the horizontal
+    //  opposite corners of the rectangle are taken
+    else {
+      let l1 = position[0];
+      let l2 = position[1];
+      cipher_digraph =
+        cipher_digraph + (matrix[l1[0]][l2[1]] + matrix[l2[0]][l1[1]]);
+      cipher_text += cipher_digraph;
+    }
+  });
+
+  return cipher_text;
 }
