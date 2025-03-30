@@ -1,3 +1,5 @@
+import include from JavaScriptSpellCheck;
+
 // Function to generate encryption matrix
 function get_matrix(key) {
   key = key.toLowerCase();
@@ -104,8 +106,6 @@ function encrypt(key, msg) {
   let digraphs = get_digraphs(msg);
   let cipher_text = "";
 
-  console.log(digraphs);
-
   digraphs.forEach((digraph) => {
     let cipher_digraph = "";
     let position = search(matrix, digraph);
@@ -141,3 +141,48 @@ function encrypt(key, msg) {
 
   return cipher_text;
 }
+
+function decrypt(key, cipher_text) {
+  let matrix = get_matrix(key);
+  let digraphs = get_digraphs(cipher_text);
+  let raw_text = "";
+
+  console.log(digraphs);
+
+  digraphs.forEach((digraph) => {
+    let raw_digraph = "";
+    let position = search(matrix, digraph);
+
+    // If both letters are in same column
+    // Then the letter below each one is chosen
+    if (position[0][1] == position[1][1]) {
+      let col = position[0][1];
+      let row1 = (position[0][0] + 4) % 5;
+      let row2 = (position[1][0] + 4) % 5;
+      raw_digraph = raw_digraph + (matrix[row1][col] + matrix[row2][col]);
+      raw_text += raw_digraph;
+    }
+    // If both the letters are in the same row
+    // then the letter to the right of each one is taken
+    else if (position[0][0] == position[1][0]) {
+      let row = position[0][0];
+      let col1 = (position[0][1] + 4) % 5;
+      let col2 = (position[1][1] + 4) % 5;
+      raw_digraph = raw_digraph + (matrix[row][col1] + matrix[row][col2]);
+      raw_text += raw_digraph;
+    }
+    // Else Form a rectangle with the two letters and the letters on the horizontal
+    //  opposite corners of the rectangle are taken
+    else {
+      let l1 = position[0];
+      let l2 = position[1];
+      raw_digraph = raw_digraph + (matrix[l1[0]][l2[1]] + matrix[l2[0]][l1[1]]);
+      raw_text += raw_digraph;
+    }
+  });
+
+  return raw_text;
+}
+
+console.log(encrypt("monarchy", "instruments"));
+console.log(decrypt("monarchy", "gatlmzclrqtx"));
