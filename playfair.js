@@ -1,8 +1,29 @@
-import include from JavaScriptSpellCheck;
+// Remove special characters
+function remove_special_chars(str) {
+  str = str.toLowerCase();
+  let res = "";
+
+  for (let i = 0; i < str.length; i++) {
+    if (str[i].charCodeAt(0) >= 97 && str[i].charCodeAt(0) <= 122)
+      res += str[i];
+  }
+  return res;
+}
+
+// get unique characters from key
+function unique(key) {
+  key = remove_special_chars(key);
+  let key_ = "";
+  for (let i = 0; i < key.length; i++) {
+    if (!key_.includes(key[i])) key_ += key[i];
+  }
+
+  return key_;
+}
 
 // Function to generate encryption matrix
 function get_matrix(key) {
-  key = key.toLowerCase();
+  key = unique(key);
 
   // Matrix for ciphering
   let matrix = [
@@ -51,6 +72,8 @@ function get_matrix(key) {
 
 // Function to generate digrams from raw message
 function get_digraphs(msg) {
+  msg = remove_special_chars(msg);
+  msg = msg.replace("j", "i"); // Replace j with i, since j is omitted from the matrix
   let digraphs = [];
 
   // generate digrams
@@ -60,7 +83,7 @@ function get_digraphs(msg) {
 
     // Last letter cannot be left alone in an off sized string
     if (i == msg.length - 1) {
-      digraph += "z"; // Add a bogus letter
+      digraph += "x"; // Add a bogus letter
       digraphs.push(digraph);
       i += 1;
       continue;
@@ -184,5 +207,5 @@ function decrypt(key, cipher_text) {
   return raw_text;
 }
 
-console.log(encrypt("monarchy", "instruments"));
-console.log(decrypt("monarchy", "gatlmzclrqtx"));
+console.log(encrypt("karthik", "juice"));
+console.log(decrypt("karthik", "eobdcz"));
