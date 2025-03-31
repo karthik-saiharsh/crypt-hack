@@ -1,3 +1,5 @@
+import { grams } from "./grams.js";
+
 // Remove special characters
 function remove_special_chars(str) {
   str = str.toLowerCase();
@@ -24,6 +26,7 @@ function unique(key) {
 // Function to generate encryption matrix
 function get_matrix(key) {
   key = unique(key);
+  key = key.replace("j", "i");
 
   // Matrix for ciphering
   let matrix = [
@@ -170,8 +173,6 @@ function decrypt(key, cipher_text) {
   let digraphs = get_digraphs(cipher_text);
   let raw_text = "";
 
-  console.log(digraphs);
-
   digraphs.forEach((digraph) => {
     let raw_digraph = "";
     let position = search(matrix, digraph);
@@ -207,5 +208,122 @@ function decrypt(key, cipher_text) {
   return raw_text;
 }
 
-console.log(encrypt("karthik", "juice"));
-console.log(decrypt("karthik", "eobdcz"));
+////////////////////// SA //////////////////////
+function scoreText(text, quadgramFrequencies) {
+  let score = 0;
+  for (let i = 0; i < text.length - 3; i++) {
+    const quadgram = text.substring(i, i + 4);
+    score += quadgramFrequencies[quadgram] || -10;
+  }
+  return score;
+}
+
+function generateRandomKey() {
+  let alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+  return alphabet
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
+}
+
+function shuffleKey(key) {
+  let keyArr = key.split("");
+  let rand = Math.random() * 100;
+  if (rand < 90) {
+    let i = Math.floor(Math.random() * 25);
+    let j = Math.floor(Math.random() * 25);
+    [keyArr[i], keyArr[j]] = [keyArr[j], keyArr[i]];
+  } else if (rand < 92) {
+    keyArr = swapRows(keyArr);
+  } else if (rand < 94) {
+    keyArr = swapColumns(keyArr);
+  } else if (rand < 96) {
+    keyArr = flipRows(keyArr);
+  } else if (rand < 98) {
+    keyArr = flipColumns(keyArr);
+  } else {
+    keyArr.reverse();
+  }
+  return keyArr.join("");
+}
+
+function simulatedAnnealing(ciphertext, quadgramData) {
+  const quadgramFrequencies = quadgramData;
+  let parentKey = generateRandomKey();
+  let parentText = decrypt(parentKey, ciphertext);
+  let parentScore = scoreText(parentText, quadgramFrequencies);
+  let temperature = 10;
+  const step = 0.1;
+  const transitions = 50000;
+
+  while (temperature > 0) {
+    for (let i = 0; i < transitions; i++) {
+      let childKey = shuffleKey(parentKey);
+      let childText = decrypt(childKey, ciphertext);
+      let childScore = scoreText(childText, quadgramFrequencies);
+      let dF = childScore - parentScore;
+
+      if (dF > 0 || Math.exp(dF / temperature) > Math.random()) {
+        parentKey = childKey;
+        parentScore = childScore;
+      }
+    }
+    temperature -= step;
+  }
+  return parentKey;
+}
+
+function swapRows(keyArr) {
+  let keyMatrix = chunkArray(keyArr, 5);
+  let i = Math.floor(Math.random() * 5);
+  let j = Math.floor(Math.random() * 5);
+  [keyMatrix[i], keyMatrix[j]] = [keyMatrix[j], keyMatrix[i]];
+  return keyMatrix.flat();
+}
+
+function swapColumns(keyArr) {
+  let keyMatrix = chunkArray(keyArr, 5);
+  let i = Math.floor(Math.random() * 5);
+  let j = Math.floor(Math.random() * 5);
+  for (let row of keyMatrix) {
+    [row[i], row[j]] = [row[j], row[i]];
+  }
+  return keyMatrix.flat();
+}
+
+function flipRows(keyArr) {
+  let keyMatrix = chunkArray(keyArr, 5).reverse();
+  return keyMatrix.flat();
+}
+
+function flipColumns(keyArr) {
+  let keyMatrix = chunkArray(keyArr, 5);
+  for (let row of keyMatrix) {
+    row.reverse();
+  }
+  return keyMatrix.flat();
+}
+
+// Helper function to split an array into 5x5 matrix
+function chunkArray(arr, size) {
+  let result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+
+let key = "TBXYOURFVGECQPZWNISHLMKDA";
+let text =
+  "The field of cryptanalysis is concerned with the study of ciphers, having as its objective the identification of weaknesses within a cryptographic system that may be exploited to convert encrypted data (cipher-text) into unencrypted data (plain-text). Whether using symmetric or asymmetric techniques, cryptanalysis assumes no knowledge of the correct cryptographic key or even the cryptographic algorithm being used.";
+
+let cipherT = encrypt(key, text);
+console.log(cipherT);
+console.log("\n\n");
+
+let decipherT = decrypt(key, cipherT);
+console.log(decipherT);
+console.log("\n\n");
+
+let result = simulatedAnnealing(cipherT, grams);
+console.log(result);
